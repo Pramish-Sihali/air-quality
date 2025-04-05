@@ -26,7 +26,8 @@ import {
 } from 'lucide-react'
 
 // Dummy data
-const exposureData = [
+// Sample historical exposure data
+const exposureHistory = [
   { date: '2023-04-01', pm25: 35, pm10: 65, location: 'Thamel', aqiCategory: 'Moderate' },
   { date: '2023-04-02', pm25: 22, pm10: 45, location: 'Patan', aqiCategory: 'Good' },
   { date: '2023-04-03', pm25: 120, pm10: 180, location: 'Kalanki', aqiCategory: 'Unhealthy' },
@@ -157,7 +158,9 @@ const getAqiColor = (value: number) => {
   return 'bg-rose-100 text-rose-800 hover:bg-rose-200';
 };
 
-const getRecommendationColor = (category: string) => {
+type BadgeVariant = 'default' | 'secondary' | 'destructive' | 'outline';
+
+const getRecommendationColor = (category: string): BadgeVariant => {
   switch (category) {
     case 'Critical': return 'destructive';
     case 'Health': return 'default';
@@ -170,6 +173,23 @@ const getRecommendationColor = (category: string) => {
 export default function Dashboard() {
   const [currentAqi] = useState(156);
   const [exposure] = useState(78);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [recentAlerts] = useState([
+    { id: 1, title: 'High Pollution Alert', message: 'PM2.5 levels exceeding 150 μg/m³ near your home', time: '30 minutes ago' },
+    { id: 2, title: 'Route Warning', message: 'Heavy congestion on your regular route - air quality degraded', time: '2 hours ago' },
+  ]);
+  
+  // Function to calculate the exposure summary based on history
+  const getExposureSummary = () => {
+    return {
+      dailyAverage: exposureHistory.reduce((sum, day) => sum + day.pm25, 0) / exposureHistory.length,
+      weeklyTrend: '+12%',
+      highestValue: Math.max(...exposureHistory.map(day => day.pm25)),
+      highestLocation: exposureHistory.sort((a, b) => b.pm25 - a.pm25)[0].location
+    };
+  }
+  
+  // const summary = getExposureSummary();
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -179,10 +199,39 @@ export default function Dashboard() {
           <h1 className="text-xl font-semibold">NepalAir: Personal Exposure Monitor</h1>
         </div>
         <div className="ml-auto flex items-center gap-4">
-          <Button variant="outline" size="sm">
-            <Bell className="mr-2 h-4 w-4" />
-            Alerts
-          </Button>
+          <div className="relative">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowNotifications(!showNotifications)}
+            >
+              <Bell className="mr-2 h-4 w-4" />
+              Alerts
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                {recentAlerts.length}
+              </span>
+            </Button>
+            
+            {showNotifications && (
+              <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg z-50 border border-gray-200">
+                <div className="p-2 border-b border-gray-200">
+                  <h3 className="font-medium">Recent Alerts</h3>
+                </div>
+                <div className="max-h-96 overflow-y-auto">
+                  {recentAlerts.map(alert => (
+                    <div key={alert.id} className="p-3 border-b border-gray-100 hover:bg-gray-50">
+                      <div className="font-medium text-sm">{alert.title}</div>
+                      <div className="text-xs text-gray-600 mt-1">{alert.message}</div>
+                      <div className="text-xs text-gray-400 mt-1">{alert.time}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="p-2 text-center">
+                  <Button variant="link" size="sm" className="text-xs">View All Notifications</Button>
+                </div>
+              </div>
+            )}
+          </div>
           <Button variant="outline" size="sm">
             <User className="mr-2 h-4 w-4" />
             Profile
@@ -227,7 +276,7 @@ export default function Dashboard() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Highest Exposure</CardTitle>
-              <CardDescription>Today's hotspot</CardDescription>
+              <CardDescription>Today&apos;s hotspot</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col">
@@ -513,7 +562,7 @@ export default function Dashboard() {
                 <div className="space-y-4">
                   {recommendations.map((rec) => (
                     <div key={rec.id} className="flex items-start space-x-4 p-3 rounded-lg bg-slate-50">
-                      <Badge variant={getRecommendationColor(rec.category) as any} className="mt-0.5">
+                      <Badge variant={getRecommendationColor(rec.category) as "default" | "secondary" | "destructive" | "outline"} className="mt-0.5">
                         {rec.category}
                       </Badge>
                       <div className="flex-1">
