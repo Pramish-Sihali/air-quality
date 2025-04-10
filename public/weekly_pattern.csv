@@ -1,0 +1,26 @@
+day,time_range,pm25,pm10,location
+Mon,6-9 AM,78,124,Kalanki
+Mon,9-12 PM,55,98,Thamel
+Mon,12-3 PM,43,75,Bhaktapur
+Mon,3-6 PM,91,145,Balaju
+Mon,6-9 PM,81,135,Koteshwor
+Tue,6-9 AM,56,92,Kalanki
+Tue,9-12 PM,32,58,Thamel
+Tue,12-3 PM,25,45,Bhaktapur
+Tue,3-6 PM,47,85,Balaju
+Tue,6-9 PM,52,95,Koteshwor
+Wed,6-9 AM,110,170,Kalanki
+Wed,9-12 PM,98,154,Thamel
+Wed,12-3 PM,85,135,Bhaktapur
+Wed,3-6 PM,132,195,Balaju
+Wed,6-9 PM,142,210,Koteshwor
+Thu,6-9 AM,92,145,Kalanki
+Thu,9-12 PM,76,125,Thamel
+Thu,12-3 PM,64,105,Bhaktapur
+Thu,3-6 PM,110,172,Balaju
+Thu,6-9 PM,89,142,Koteshwor
+Fri,6-9 AM,36,65,Kalanki
+Fri,9-12 PM,29,52,Thamel
+Fri,12-3 PM,25,45,Bhaktapur
+Fri,3-6 PM,47,82,Balaju
+Fri,6-9 PM,38,70,Koteshwor

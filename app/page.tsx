@@ -1,8 +1,14 @@
-// app/page.tsx
 'use client'
 
-import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useEffect, useState } from 'react'
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardHeader, 
+  CardTitle, 
+  CardFooter
+} from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ResponsiveBar } from '@nivo/bar'
 import { ResponsiveLine } from '@nivo/line'
@@ -10,8 +16,8 @@ import { ResponsivePie } from '@nivo/pie'
 import { ResponsiveHeatMap } from '@nivo/heatmap'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Progress } from '@/components/ui/progress'
+import { Skeleton } from '@/components/ui/skeleton'
 import { 
   CalendarDays, 
   MapPin, 
@@ -22,178 +28,281 @@ import {
   BarChart3,
   Map,
   User,
-  Bell
+  Bell,
+  Droplets,
+  ExternalLink,
+  Calendar,
+  ArrowUpRight,
+  ArrowDownRight,
+  ThermometerSun,
+  Filter,
+  Download,
+  ChevronDown
 } from 'lucide-react'
 
-// Dummy data
-// Sample historical exposure data
-const exposureHistory = [
-  { date: '2023-04-01', pm25: 35, pm10: 65, location: 'Thamel', aqiCategory: 'Moderate' },
-  { date: '2023-04-02', pm25: 22, pm10: 45, location: 'Patan', aqiCategory: 'Good' },
-  { date: '2023-04-03', pm25: 120, pm10: 180, location: 'Kalanki', aqiCategory: 'Unhealthy' },
-  { date: '2023-04-04', pm25: 85, pm10: 125, location: 'Balaju', aqiCategory: 'Unhealthy for Sensitive Groups' },
-  { date: '2023-04-05', pm25: 28, pm10: 52, location: 'Bhaktapur', aqiCategory: 'Moderate' },
-  { date: '2023-04-06', pm25: 18, pm10: 32, location: 'Lalitpur', aqiCategory: 'Good' },
-  { date: '2023-04-07', pm25: 156, pm10: 210, location: 'Koteshwor', aqiCategory: 'Very Unhealthy' },
-]
+// Import our custom data utilities without PapaParse
+import { 
+  loadCSV, 
+  convertToLineChartData, 
+  convertHourlyToChartData,
+  convertToPieChartData,
+  convertToHeatmapData,
+  calculateExposureSummary,
+  getAqiColor,
+  getAqiText,
+  getRecommendationVariant,
+  getAlertSeverityColor,
+  getHighestExposureData,
+  getCriticalAlert,
+  generateHealthImpactAssessment,
+  ExposureRecord,
+  HourlyExposure,
+  LocationData,
+  WeeklyPattern,
+  Recommendation,
+  Alert,
+  ExposureSummary,
+  HighestExposureData
+} from '../lib/data-utils'
 
-const weeklyData = [
-  {
-    id: 'PM2.5',
-    data: [
-      { x: 'Mon', y: 35 },
-      { x: 'Tue', y: 22 },
-      { x: 'Wed', y: 120 },
-      { x: 'Thu', y: 85 },
-      { x: 'Fri', y: 28 },
-      { x: 'Sat', y: 18 },
-      { x: 'Sun', y: 42 },
-    ],
-  },
-  {
-    id: 'PM10',
-    data: [
-      { x: 'Mon', y: 65 },
-      { x: 'Tue', y: 45 },
-      { x: 'Wed', y: 180 },
-      { x: 'Thu', y: 125 },
-      { x: 'Fri', y: 52 },
-      { x: 'Sat', y: 32 },
-      { x: 'Sun', y: 78 },
-    ],
-  },
-]
-
-const hourlyExposureData = [
-  {
-    id: 'hourly',
-    data: [
-      { x: '6am', y: 15 },
-      { x: '8am', y: 85 },
-      { x: '10am', y: 60 },
-      { x: '12pm', y: 45 },
-      { x: '2pm', y: 30 },
-      { x: '4pm', y: 55 },
-      { x: '6pm', y: 95 },
-      { x: '8pm', y: 40 },
-    ],
-  },
-]
-
-const exposureByLocation = [
-  { id: 'Thamel', value: 35 },
-  { id: 'Kalanki', value: 120 },
-  { id: 'Balaju', value: 85 },
-  { id: 'Bhaktapur', value: 28 },
-  { id: 'Lalitpur', value: 18 },
-]
-
-const heatmapData = [
-  {
-    id: 'Mon',
-    data: [
-      { x: '6-9 AM', y: 78 },
-      { x: '9-12 PM', y: 55 },
-      { x: '12-3 PM', y: 43 },
-      { x: '3-6 PM', y: 91 },
-      { x: '6-9 PM', y: 81 },
-    ],
-  },
-  {
-    id: 'Tue',
-    data: [
-      { x: '6-9 AM', y: 56 },
-      { x: '9-12 PM', y: 32 },
-      { x: '12-3 PM', y: 25 },
-      { x: '3-6 PM', y: 47 },
-      { x: '6-9 PM', y: 52 },
-    ],
-  },
-  {
-    id: 'Wed',
-    data: [
-      { x: '6-9 AM', y: 110 },
-      { x: '9-12 PM', y: 98 },
-      { x: '12-3 PM', y: 85 },
-      { x: '3-6 PM', y: 132 },
-      { x: '6-9 PM', y: 142 },
-    ],
-  },
-  {
-    id: 'Thu',
-    data: [
-      { x: '6-9 AM', y: 92 },
-      { x: '9-12 PM', y: 76 },
-      { x: '12-3 PM', y: 64 },
-      { x: '3-6 PM', y: 110 },
-      { x: '6-9 PM', y: 89 },
-    ],
-  },
-  {
-    id: 'Fri',
-    data: [
-      { x: '6-9 AM', y: 36 },
-      { x: '9-12 PM', y: 29 },
-      { x: '12-3 PM', y: 25 },
-      { x: '3-6 PM', y: 47 },
-      { x: '6-9 PM', y: 38 },
-    ],
-  },
-]
-
-const recommendations = [
-  { id: 1, text: 'Consider using an N95 mask during your morning commute to Kalanki', category: 'Critical', route: 'Home to Office' },
-  { id: 2, text: 'Schedule outdoor exercise before 9 AM when pollution levels are lower', category: 'Health', route: 'Daily Routine' },
-  { id: 3, text: 'Alternative route via Lalitpur reduces your PM2.5 exposure by 45%', category: 'Route', route: 'Office to Home' },
-  { id: 4, text: 'Close windows during evening hours (6-8 PM) when pollution spikes', category: 'Home', route: 'Indoor Air' },
-]
-
-// Helper function to get color based on AQI level
-const getAqiColor = (value: number) => {
-  if (value <= 50) return 'bg-green-100 text-green-800 hover:bg-green-200';
-  if (value <= 100) return 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200';
-  if (value <= 150) return 'bg-orange-100 text-orange-800 hover:bg-orange-200';
-  if (value <= 200) return 'bg-red-100 text-red-800 hover:bg-red-200';
-  if (value <= 300) return 'bg-purple-100 text-purple-800 hover:bg-purple-200';
-  return 'bg-rose-100 text-rose-800 hover:bg-rose-200';
+// Custom Alert component to replace shadcn Alert
+const CustomAlert = ({ 
+  className = "", 
+  children, 
+  icon 
+}: { 
+  className?: string, 
+  children: React.ReactNode, 
+  icon?: React.ReactNode 
+}) => {
+  return (
+    <div className={`p-4 rounded-lg border flex items-start gap-2 ${className}`}>
+      {icon && <div className="shrink-0 mt-0.5">{icon}</div>}
+      <div>{children}</div>
+    </div>
+  );
 };
 
-type BadgeVariant = 'default' | 'secondary' | 'destructive' | 'outline';
+const CustomAlertTitle = ({ children }: { children: React.ReactNode }) => (
+  <h5 className="font-medium mb-1">{children}</h5>
+);
 
-const getRecommendationColor = (category: string): BadgeVariant => {
-  switch (category) {
-    case 'Critical': return 'destructive';
-    case 'Health': return 'default';
-    case 'Route': return 'secondary';
-    case 'Home': return 'outline';
-    default: return 'default';
-  }
+const CustomAlertDescription = ({ children }: { children: React.ReactNode }) => (
+  <div className="text-sm">{children}</div>
+);
+
+interface SelectOption {
+  value: string;
+  label: string;
+}
+
+// Custom Select component to replace shadcn Select
+const CustomSelect = ({ 
+  options, 
+  value, 
+  onChange,
+  placeholder = "Select option"
+}: {
+  options: SelectOption[],
+  value: string,
+  onChange: (value: string) => void,
+  placeholder?: string
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  const handleSelect = (optionValue: string) => {
+    onChange(optionValue);
+    setIsOpen(false);
+  };
+  
+  const selectedOption = options.find(option => option.value === value);
+  
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        className="w-[140px] h-8 text-sm bg-white flex items-center justify-between px-3 py-1.5 rounded-md border border-gray-200 text-gray-800"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <span>{selectedOption ? selectedOption.label : placeholder}</span>
+        <ChevronDown className="h-4 w-4 ml-1 text-gray-500" />
+      </button>
+      
+      {isOpen && (
+        <div className="absolute z-10 mt-1 w-full bg-white rounded-md shadow-lg border border-gray-200">
+          <div className="py-1 max-h-60 overflow-auto">
+            {options.map((option) => (
+              <div
+                key={option.value}
+                className={`px-3 py-1.5 text-sm cursor-pointer hover:bg-gray-100 ${value === option.value ? 'bg-gray-50 font-medium' : ''}`}
+                onClick={() => handleSelect(option.value)}
+              >
+                {option.label}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default function Dashboard() {
-  const [currentAqi] = useState(156);
-  const [exposure] = useState(78);
+  // State for data
+  const [exposureHistory, setExposureHistory] = useState<ExposureRecord[]>([]);
+  const [hourlyExposure, setHourlyExposure] = useState<HourlyExposure[]>([]);
+  const [locationData, setLocationData] = useState<LocationData[]>([]);
+  const [weeklyPattern, setWeeklyPattern] = useState<WeeklyPattern[]>([]);
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  
+  // UI state
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentAqi, setCurrentAqi] = useState(156);
+  const [exposure, setExposure] = useState(78);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [recentAlerts] = useState([
-    { id: 1, title: 'High Pollution Alert', message: 'PM2.5 levels exceeding 150 μg/m³ near your home', time: '30 minutes ago' },
-    { id: 2, title: 'Route Warning', message: 'Heavy congestion on your regular route - air quality degraded', time: '2 hours ago' },
-  ]);
+  const [timeFilter, setTimeFilter] = useState('week');
   
-  // Function to calculate the exposure summary based on history
-  const getExposureSummary = () => {
-    return {
-      dailyAverage: exposureHistory.reduce((sum, day) => sum + day.pm25, 0) / exposureHistory.length,
-      weeklyTrend: '+12%',
-      highestValue: Math.max(...exposureHistory.map(day => day.pm25)),
-      highestLocation: exposureHistory.sort((a, b) => b.pm25 - a.pm25)[0].location
-    };
+  // Derived data
+  const [exposureSummary, setExposureSummary] = useState<ExposureSummary | null>(null);
+  const [highestExposure, setHighestExposure] = useState<HighestExposureData | null>(null);
+  const [criticalAlert, setCriticalAlert] = useState<Alert | undefined>(undefined);
+  const [healthImpacts, setHealthImpacts] = useState<string[]>([]);
+
+  // Time filter options
+  const timeFilterOptions = [
+    { value: 'day', label: 'Today' },
+    { value: 'week', label: 'This Week' },
+    { value: 'month', label: 'This Month' }
+  ];
+
+  // Load data on component mount
+  useEffect(() => {
+    async function fetchData() {
+      setIsLoading(true);
+      
+      try {
+        // Load all CSV data files
+        const exposureData = await loadCSV<ExposureRecord>('/exposure_history.csv');
+        const hourlyData = await loadCSV<HourlyExposure>('/hourly_exposure.csv');
+        const locationsData = await loadCSV<LocationData>('/location_data.csv');
+        const weeklyData = await loadCSV<WeeklyPattern>('/weekly_pattern.csv');
+        const recsData = await loadCSV<Recommendation>('/recommendations.csv');
+        const alertsData = await loadCSV<Alert>('/alerts.csv');
+        
+        // Update state with loaded data
+        setExposureHistory(exposureData);
+        setHourlyExposure(hourlyData);
+        setLocationData(locationsData);
+        setWeeklyPattern(weeklyData);
+        setRecommendations(recsData);
+        setAlerts(alertsData);
+        
+        // Calculate derived data
+        const summary = calculateExposureSummary(exposureData);
+        setExposureSummary(summary);
+        
+        // Set current AQI from summary data if available
+        if (summary?.currentAqi) {
+          setCurrentAqi(summary.currentAqi);
+        }
+        
+        const highest = getHighestExposureData(hourlyData);
+        setHighestExposure(highest);
+        
+        const critical = getCriticalAlert(alertsData);
+        setCriticalAlert(critical);
+        
+        if (summary) {
+          setExposure(Math.round(summary.dailyAverage));
+          const impacts = generateHealthImpactAssessment(summary);
+          setHealthImpacts(impacts);
+        }
+      } catch (error) {
+        console.error("Error loading data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
+    fetchData();
+  }, []);
+  
+  // Update data when time filter changes
+  useEffect(() => {
+    // In a real app, we would filter the data based on timeFilter
+    // For now, we'll just log the change
+    console.log(`Time filter changed to: ${timeFilter}`);
+    // This would update the currentAqi based on the selected timeframe
+    if (timeFilter === 'day') {
+      // For demo purposes, set a different AQI value based on filter
+      setCurrentAqi(148);
+    } else if (timeFilter === 'week') {
+      setCurrentAqi(156);
+    } else if (timeFilter === 'month') {
+      setCurrentAqi(132);
+    }
+  }, [timeFilter]);
+  
+  // Prepare chart data
+  const lineChartData = convertToLineChartData(exposureHistory);
+  const hourlyChartData = convertHourlyToChartData(hourlyExposure);
+  const pieChartData = convertToPieChartData(locationData);
+  const heatmapData = convertToHeatmapData(weeklyPattern);
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <header className="sticky top-0 z-50 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
+          <div className="flex items-center gap-2">
+            <Wind className="h-6 w-6 text-blue-600" />
+            <h1 className="text-xl font-semibold">NepalAir: Personal Exposure Monitor</h1>
+          </div>
+          <div className="ml-auto flex items-center gap-4">
+            <Skeleton className="h-9 w-[80px]" />
+            <Skeleton className="h-9 w-[80px]" />
+          </div>
+        </header>
+        <main className="flex-1 p-4 md:p-6 bg-slate-50">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {[1, 2, 3, 4].map((i) => (
+              <Card key={i}>
+                <CardHeader className="pb-2">
+                  <Skeleton className="h-4 w-[140px]" />
+                  <Skeleton className="h-3 w-[100px]" />
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-col space-y-3">
+                    <Skeleton className="h-10 w-[100px]" />
+                    <Skeleton className="h-4 w-[120px]" />
+                    <Skeleton className="h-3 w-[150px]" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          
+          <div className="mt-6">
+            <Skeleton className="h-12 w-[300px] mb-4" />
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-[200px]" />
+                <Skeleton className="h-4 w-[300px]" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-[400px] w-full" />
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+      </div>
+    );
   }
-  
-  // const summary = getExposureSummary();
 
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="sticky top-0 z-50 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
+      <header className="sticky top-0 z-50 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 shadow-sm">
         <div className="flex items-center gap-2">
           <Wind className="h-6 w-6 text-blue-600" />
           <h1 className="text-xl font-semibold">NepalAir: Personal Exposure Monitor</h1>
@@ -204,12 +313,15 @@ export default function Dashboard() {
               variant="outline" 
               size="sm"
               onClick={() => setShowNotifications(!showNotifications)}
+              className="flex items-center"
             >
               <Bell className="mr-2 h-4 w-4" />
               Alerts
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                {recentAlerts.length}
-              </span>
+              {alerts.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {alerts.length}
+                </span>
+              )}
             </Button>
             
             {showNotifications && (
@@ -218,11 +330,23 @@ export default function Dashboard() {
                   <h3 className="font-medium">Recent Alerts</h3>
                 </div>
                 <div className="max-h-96 overflow-y-auto">
-                  {recentAlerts.map(alert => (
+                  {alerts.map(alert => (
                     <div key={alert.id} className="p-3 border-b border-gray-100 hover:bg-gray-50">
                       <div className="font-medium text-sm">{alert.title}</div>
                       <div className="text-xs text-gray-600 mt-1">{alert.message}</div>
-                      <div className="text-xs text-gray-400 mt-1">{alert.time}</div>
+                      <div className="flex items-center justify-between mt-1">
+                        <span className="text-xs text-gray-400">{alert.time}</span>
+                        <Badge 
+                          variant="outline" 
+                          className={`text-xs ${
+                            alert.severity === 'Critical' ? 'bg-red-50 text-red-700 border-red-200' : 
+                            alert.severity === 'Warning' ? 'bg-amber-50 text-amber-700 border-amber-200' : 
+                            'bg-blue-50 text-blue-700 border-blue-200'
+                          }`}
+                        >
+                          {alert.severity}
+                        </Badge>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -232,23 +356,50 @@ export default function Dashboard() {
               </div>
             )}
           </div>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="flex items-center">
             <User className="mr-2 h-4 w-4" />
             Profile
           </Button>
+          <Button variant="default" size="sm" className="flex items-center">
+            <Download className="mr-2 h-4 w-4" />
+            Export Data
+          </Button>
         </div>
       </header>
-      <main className="flex-1 p-4 md:p-6 bg-gray-50">
+      <main className="flex-1 p-4 md:p-6 bg-slate-50">
+        {/* Filter Section */}
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Personal Air Quality Dashboard</h2>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-slate-500" />
+              <span className="text-sm text-slate-600">Filter by:</span>
+            </div>
+            <CustomSelect 
+              options={timeFilterOptions}
+              value={timeFilter}
+              onChange={setTimeFilter}
+              placeholder="Time Period"
+            />
+          </div>
+        </div>
+        
+        {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
+          <Card className="border-none shadow-sm">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Current AQI</CardTitle>
+              <CardTitle className="text-sm font-medium flex items-center">
+                <ThermometerSun className="h-4 w-4 mr-2 text-blue-500" />
+                Current AQI
+              </CardTitle>
               <CardDescription>Kathmandu Valley</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col items-center">
                 <div className="text-4xl font-bold">{currentAqi}</div>
-                <Badge className={getAqiColor(currentAqi)}>Very Unhealthy</Badge>
+                <Badge className={`mt-1 ${getAqiColor(currentAqi)}`}>
+                  {getAqiText(currentAqi)}
+                </Badge>
                 <div className="mt-2 text-xs text-muted-foreground">
                   <MapPin className="mr-1 h-3 w-3 inline" />
                   Last updated 15 minutes ago
@@ -256,54 +407,72 @@ export default function Dashboard() {
               </div>
             </CardContent>
           </Card>
-          <Card>
+          
+          <Card className="border-none shadow-sm">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Your Daily Exposure</CardTitle>
+              <CardTitle className="text-sm font-medium flex items-center">
+                <Droplets className="h-4 w-4 mr-2 text-blue-500" />
+                Your Daily Exposure
+              </CardTitle>
               <CardDescription>Compared to WHO Guidelines</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col">
                 <div className="text-4xl font-bold">{exposure} μg/m³</div>
                 <div className="mt-2">
-                  <Progress value={78} className="h-2" />
+                  <Progress value={exposure * 2} className="h-2" />
                 </div>
                 <div className="mt-1 text-xs text-muted-foreground">
-                  156% of WHO recommended limit (25 μg/m³)
+                  {exposureSummary?.exposureAboveWHO} of WHO recommended limit (25 μg/m³)
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card>
+          
+          <Card className="border-none shadow-sm">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Highest Exposure</CardTitle>
+              <CardTitle className="text-sm font-medium flex items-center">
+                <MapPin className="h-4 w-4 mr-2 text-blue-500" />
+                Highest Exposure
+              </CardTitle>
               <CardDescription>Today&apos;s hotspot</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col">
-                <div className="text-4xl font-bold">Kalanki</div>
+                <div className="text-4xl font-bold">{highestExposure?.location || 'Loading...'}</div>
                 <Badge variant="outline" className="mt-1 w-fit">
                   <Clock className="mr-1 h-3 w-3" />
-                  8:15 - 9:00 AM
+                  {highestExposure?.time || '8:15 - 9:00 AM'}
                 </Badge>
                 <div className="mt-2 text-xs text-muted-foreground">
-                  During morning commute (156 μg/m³)
+                  During morning commute ({highestExposure?.value || 156} μg/m³)
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card>
+          
+          <Card className="border-none shadow-sm">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Alert</CardTitle>
+              <CardTitle className="text-sm font-medium flex items-center">
+                <AlertTriangle className="h-4 w-4 mr-2 text-red-500" />
+                Alert
+              </CardTitle>
               <CardDescription>Take action now</CardDescription>
             </CardHeader>
             <CardContent>
-              <Alert className="bg-red-50 border-red-200">
-                <AlertTriangle className="h-4 w-4 text-red-600" />
-                <AlertTitle className="text-red-800">High Pollution Alert</AlertTitle>
-                <AlertDescription className="text-red-700">
-                  Unhealthy air quality expected during evening rush hour (5-7 PM).
-                </AlertDescription>
-              </Alert>
+              {criticalAlert ? (
+                <CustomAlert className={getAlertSeverityColor(criticalAlert.severity)} icon={<AlertTriangle className="h-4 w-4 text-red-600" />}>
+                  <CustomAlertTitle>{criticalAlert.title}</CustomAlertTitle>
+                  <CustomAlertDescription>{criticalAlert.message}</CustomAlertDescription>
+                </CustomAlert>
+              ) : (
+                <CustomAlert className="bg-green-50 border-green-200" icon={<AlertTriangle className="h-4 w-4 text-green-600" />}>
+                  <CustomAlertTitle>No Critical Alerts</CustomAlertTitle>
+                  <CustomAlertDescription>
+                    Air quality is currently within acceptable parameters.
+                  </CustomAlertDescription>
+                </CustomAlert>
+              )}
               <Button variant="link" size="sm" className="mt-2 p-0">
                 See recommended actions
                 <ChevronRight className="ml-1 h-4 w-4" />
@@ -313,25 +482,30 @@ export default function Dashboard() {
         </div>
 
         <Tabs defaultValue="dashboard" className="mt-6">
-          <TabsList>
-            <TabsTrigger value="dashboard">
+          <TabsList className="grid w-full grid-cols-3 rounded-lg bg-slate-100 p-1">
+            <TabsTrigger value="dashboard" className="flex items-center justify-center rounded-md py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
               <BarChart3 className="mr-2 h-4 w-4" />
               Dashboard
             </TabsTrigger>
-            <TabsTrigger value="map">
+            <TabsTrigger value="map" className="flex items-center justify-center rounded-md py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
               <Map className="mr-2 h-4 w-4" />
               Map View
             </TabsTrigger>
-            <TabsTrigger value="personal">
+            <TabsTrigger value="personal" className="flex items-center justify-center rounded-md py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
               <User className="mr-2 h-4 w-4" />
               Personal Insights
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="dashboard" className="space-y-4">
+          
+          <TabsContent value="dashboard" className="space-y-4 mt-4">
+            {/* Weekly Trends and Location Analysis */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <Card className="col-span-2">
+              <Card className="col-span-2 border-none shadow-sm">
                 <CardHeader>
-                  <CardTitle>Weekly Exposure Trends</CardTitle>
+                  <CardTitle className="flex items-center">
+                    <Calendar className="h-5 w-5 mr-2 text-blue-500" />
+                    Weekly Exposure Trends
+                  </CardTitle>
                   <CardDescription>
                     PM2.5 and PM10 levels over the past week
                   </CardDescription>
@@ -339,7 +513,7 @@ export default function Dashboard() {
                 <CardContent className="px-2">
                   <div className="h-80">
                     <ResponsiveLine
-                      data={weeklyData}
+                      data={lineChartData}
                       margin={{ top: 10, right: 110, bottom: 50, left: 60 }}
                       xScale={{ type: 'point' }}
                       yScale={{
@@ -353,7 +527,7 @@ export default function Dashboard() {
                         tickSize: 5,
                         tickPadding: 5,
                         tickRotation: 0,
-                        legend: 'Day of Week',
+                        legend: 'Day',
                         legendOffset: 36,
                         legendPosition: 'middle',
                       }}
@@ -365,7 +539,7 @@ export default function Dashboard() {
                         legendOffset: -40,
                         legendPosition: 'middle',
                       }}
-                      colors={{ scheme: 'category10' }}
+                      colors={{ scheme: 'set2' }}
                       pointSize={10}
                       pointColor={{ theme: 'background' }}
                       pointBorderWidth={2}
@@ -393,9 +567,13 @@ export default function Dashboard() {
                   </div>
                 </CardContent>
               </Card>
-              <Card>
+              
+              <Card className="border-none shadow-sm">
                 <CardHeader>
-                  <CardTitle>Exposure by Location</CardTitle>
+                  <CardTitle className="flex items-center">
+                    <MapPin className="h-5 w-5 mr-2 text-blue-500" />
+                    Exposure by Location
+                  </CardTitle>
                   <CardDescription>
                     Where you experience the most pollution
                   </CardDescription>
@@ -403,7 +581,7 @@ export default function Dashboard() {
                 <CardContent>
                   <div className="h-80">
                     <ResponsivePie
-                      data={exposureByLocation}
+                      data={pieChartData}
                       margin={{ top: 20, right: 20, bottom: 80, left: 20 }}
                       innerRadius={0.5}
                       padAngle={0.7}
@@ -441,16 +619,20 @@ export default function Dashboard() {
               </Card>
             </div>
 
+            {/* Daily Pattern and Heatmap */}
             <div className="grid gap-4 md:grid-cols-2">
-              <Card>
+              <Card className="border-none shadow-sm">
                 <CardHeader>
-                  <CardTitle>Daily Pattern</CardTitle>
+                  <CardTitle className="flex items-center">
+                    <Clock className="h-5 w-5 mr-2 text-blue-500" />
+                    Daily Pattern
+                  </CardTitle>
                   <CardDescription>Time of day exposure analysis</CardDescription>
                 </CardHeader>
                 <CardContent className="px-2">
                   <div className="h-80">
                     <ResponsiveLine
-                      data={hourlyExposureData}
+                      data={hourlyChartData}
                       margin={{ top: 10, right: 30, bottom: 50, left: 60 }}
                       xScale={{ type: 'point' }}
                       yScale={{ type: 'linear', min: 0, max: 100 }}
@@ -485,9 +667,13 @@ export default function Dashboard() {
                   </div>
                 </CardContent>
               </Card>
-              <Card>
+              
+              <Card className="border-none shadow-sm">
                 <CardHeader>
-                  <CardTitle>Exposure Heatmap</CardTitle>
+                  <CardTitle className="flex items-center">
+                    <Calendar className="h-5 w-5 mr-2 text-blue-500" />
+                    Exposure Heatmap
+                  </CardTitle>
                   <CardDescription>Weekly patterns by time of day</CardDescription>
                 </CardHeader>
                 <CardContent className="px-2">
@@ -551,38 +737,60 @@ export default function Dashboard() {
               </Card>
             </div>
 
-            <Card>
+            {/* Recommendations */}
+            <Card className="border-none shadow-sm">
               <CardHeader>
-                <CardTitle>Personalized Recommendations</CardTitle>
+                <CardTitle className="flex items-center">
+                  <ExternalLink className="h-5 w-5 mr-2 text-blue-500" />
+                  Personalized Recommendations
+                </CardTitle>
                 <CardDescription>
                   Based on your exposure patterns
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {recommendations.map((rec) => (
-                    <div key={rec.id} className="flex items-start space-x-4 p-3 rounded-lg bg-slate-50">
-                      <Badge variant={getRecommendationColor(rec.category) as "default" | "secondary" | "destructive" | "outline"} className="mt-0.5">
+                  {recommendations.slice(0, 4).map((rec) => (
+                    <div key={rec.id} className="flex items-start space-x-4 p-3 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors">
+                      <Badge 
+                        variant={getRecommendationVariant(rec.category)} 
+                        className="mt-0.5 shrink-0"
+                      >
                         {rec.category}
                       </Badge>
                       <div className="flex-1">
                         <div className="text-sm font-medium">{rec.text}</div>
-                        <div className="text-xs text-muted-foreground mt-1">
+                        <div className="text-xs text-muted-foreground mt-1 flex items-center">
                           <CalendarDays className="h-3 w-3 inline mr-1" />
                           {rec.route}
+                          {rec.priority === 'High' && (
+                            <Badge variant="outline" className="ml-2 py-0 text-[10px] h-4 bg-amber-50 border-amber-200 text-amber-700">
+                              High Priority
+                            </Badge>
+                          )}
                         </div>
                       </div>
                       <Button size="sm" variant="outline">Apply</Button>
                     </div>
                   ))}
                 </div>
+                <div className="mt-4 text-center">
+                  <Button variant="outline">
+                    View All Recommendations
+                    <ChevronRight className="ml-1 h-4 w-4" />
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
-          <TabsContent value="map">
-            <Card>
+          
+          <TabsContent value="map" className="mt-4">
+            <Card className="border-none shadow-sm">
               <CardHeader>
-                <CardTitle>Air Quality Map</CardTitle>
+                <CardTitle className="flex items-center">
+                  <Map className="h-5 w-5 mr-2 text-blue-500" />
+                  Air Quality Map
+                </CardTitle>
                 <CardDescription>
                   Interactive map showing air quality across Kathmandu Valley
                 </CardDescription>
@@ -596,15 +804,29 @@ export default function Dashboard() {
                       The full implementation would include an interactive map with color-coded air quality
                       indicators, your location history, and pollution hotspots.
                     </p>
+                    <Button className="mt-4">Load Map Data</Button>
                   </div>
                 </div>
               </CardContent>
+              <CardFooter className="bg-slate-50 border-t flex justify-between items-center">
+                <div className="text-sm text-slate-500">
+                  Last updated: Today, 10:45 AM
+                </div>
+                <Button variant="outline" size="sm">
+                  <Download className="h-4 w-4 mr-2" />
+                  Export Map Data
+                </Button>
+              </CardFooter>
             </Card>
           </TabsContent>
-          <TabsContent value="personal">
-            <Card>
+          
+          <TabsContent value="personal" className="mt-4">
+            <Card className="border-none shadow-sm">
               <CardHeader>
-                <CardTitle>Personal Insights</CardTitle>
+                <CardTitle className="flex items-center">
+                  <User className="h-5 w-5 mr-2 text-blue-500" />
+                  Personal Insights
+                </CardTitle>
                 <CardDescription>
                   Tailored analysis of your exposure patterns
                 </CardDescription>
@@ -612,16 +834,30 @@ export default function Dashboard() {
               <CardContent>
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-medium mb-2">Exposure Summary</h3>
+                    <h3 className="text-lg font-medium mb-2 flex items-center">
+                      <Droplets className="h-4 w-4 mr-2 text-blue-500" />
+                      Exposure Summary
+                    </h3>
                     <div className="grid gap-4 md:grid-cols-3">
                       <div className="bg-slate-50 p-4 rounded-lg">
                         <div className="text-sm font-medium text-slate-500">Daily Average</div>
-                        <div className="text-2xl font-bold mt-1">78 μg/m³</div>
-                        <div className="text-xs text-red-600 mt-1">156% of WHO guideline</div>
+                        <div className="text-2xl font-bold mt-1">
+                          {exposureSummary?.dailyAverage.toFixed(1) || 78} μg/m³
+                        </div>
+                        <div className="text-xs text-red-600 mt-1">
+                          {exposureSummary?.exposureAboveWHO || '156%'} of WHO guideline
+                        </div>
                       </div>
                       <div className="bg-slate-50 p-4 rounded-lg">
                         <div className="text-sm font-medium text-slate-500">Weekly Trend</div>
-                        <div className="text-2xl font-bold mt-1">↑ 12%</div>
+                        <div className="text-2xl font-bold mt-1 flex items-center">
+                          {exposureSummary?.weeklyTrendDirection === 'up' ? (
+                            <ArrowUpRight className="mr-1 h-5 w-5 text-red-500" />
+                          ) : (
+                            <ArrowDownRight className="mr-1 h-5 w-5 text-green-500" />
+                          )}
+                          {exposureSummary?.weeklyTrend || '+12%'}
+                        </div>
                         <div className="text-xs text-slate-500 mt-1">Compared to last week</div>
                       </div>
                       <div className="bg-slate-50 p-4 rounded-lg">
@@ -633,24 +869,30 @@ export default function Dashboard() {
                   </div>
                   
                   <div>
-                    <h3 className="text-lg font-medium mb-2">Health Impact Assessment</h3>
+                    <h3 className="text-lg font-medium mb-2 flex items-center">
+                      <AlertTriangle className="h-4 w-4 mr-2 text-blue-500" />
+                      Health Impact Assessment
+                    </h3>
                     <div className="bg-slate-50 p-4 rounded-lg">
                       <div className="text-sm">
                         Based on your exposure patterns, your current air pollution exposure may contribute to:
                       </div>
                       <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
-                        <li>Increased risk of respiratory symptoms</li>
-                        <li>Potential aggravation of existing conditions</li>
-                        <li>Long-term cardiovascular stress if sustained</li>
+                        {healthImpacts.map((impact, index) => (
+                          <li key={index}>{impact}</li>
+                        ))}
                       </ul>
                       <div className="mt-3 text-sm">
-                        Following the recommended actions could reduce your health risks by up to 35%.
+                        <strong>Note:</strong> Following the recommended actions could reduce your health risks by up to 35%.
                       </div>
                     </div>
                   </div>
                   
                   <div>
-                    <h3 className="text-lg font-medium mb-2">Long-term Analysis</h3>
+                    <h3 className="text-lg font-medium mb-2 flex items-center">
+                      <Calendar className="h-4 w-4 mr-2 text-blue-500" />
+                      Long-term Analysis
+                    </h3>
                     <div className="h-60">
                       <ResponsiveBar
                         data={[
@@ -690,12 +932,25 @@ export default function Dashboard() {
                   </div>
                 </div>
               </CardContent>
+              <CardFooter className="bg-slate-50 border-t flex justify-between">
+                <Button variant="outline">
+                  <Download className="h-4 w-4 mr-2" />
+                  Download Report
+                </Button>
+                <Button>
+                  Schedule Health Consultation
+                  <ExternalLink className="ml-2 h-4 w-4" />
+                </Button>
+              </CardFooter>
             </Card>
           </TabsContent>
         </Tabs>
       </main>
       <footer className="border-t bg-background p-4 text-center text-sm text-muted-foreground">
-        NepalAir Personal Exposure Monitoring — Helping you breathe easier © 2023
+        <div className="flex items-center justify-center gap-2">
+          <Wind className="h-4 w-4 text-blue-500" />
+          NepalAir Personal Exposure Monitoring — Helping you breathe easier © 2023
+        </div>
       </footer>
     </div>
   )
