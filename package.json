@@ -9,10 +9,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@nivo/bar": "^0.88.0",
-    "@nivo/heatmap": "^0.88.0",
-    "@nivo/line": "^0.88.0",
-    "@nivo/pie": "^0.88.0",
     "@radix-ui/react-progress": "^1.1.2",
     "@radix-ui/react-select": "^2.1.7",
     "@radix-ui/react-slot": "^1.1.2",
@@ -24,6 +20,7 @@
     "papaparse": "^5.5.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "recharts": "^2.15.2",
     "tailwind-merge": "^3.1.0",
     "tw-animate-css": "^1.2.5"
   },
