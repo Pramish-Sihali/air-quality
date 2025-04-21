@@ -1,25 +1,24 @@
 // app/page.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState} from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area, Scatter, ScatterChart, ZAxis, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts'
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Progress } from '@/components/ui/progress'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import React, { SVGProps } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Calendar } from '@/components/ui/calendar'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Switch } from '@/components/ui/switch'
-import { Separator } from '@/components/ui/separator'
+
 import {
-  CalendarDays,
+
   MapPin,
   AlertTriangle,
   Wind,
@@ -34,7 +33,7 @@ import {
   Calendar as CalendarIcon,
   Home,
   TrendingUp,
-  BarChart2,
+
   Activity,
   Search,
   FileText,
@@ -43,22 +42,22 @@ import {
   Layers,
   Thermometer,
   Droplets,
-  Sun,
+
   Heart,
-  Leaf,
+
   Info,
   Mail,
   Menu,
   X,
-  ChevronDown,
+
   LogOut,
   UserPlus,
   AlertCircle
 } from 'lucide-react'
-import { format } from 'date-fns'
+
 
 // Custom component for Lungs icon that's missing from lucide-react
-const Lungs = (props: any) => {
+const Lungs = (props: SVGProps<SVGSVGElement>) => {
   return (
     <svg
       {...props}
@@ -85,7 +84,7 @@ const Lungs = (props: any) => {
 };
 
 // Custom component for Moon icon
-const Moon = (props: any) => {
+const Moon = (props: SVGProps<SVGSVGElement>) => {
   return (
     <svg
       {...props}
@@ -106,22 +105,22 @@ const Moon = (props: any) => {
 
 // Enhanced dummy data
 // Sample historical exposure data
-const exposureHistory = [
-  { date: '2023-04-01', pm25: 35, pm10: 65, aqi: 68, o3: 45, no2: 22, so2: 12, location: 'Thamel', aqiCategory: 'Moderate', temperature: 25, humidity: 50, windSpeed: 10 },
-  { date: '2023-04-02', pm25: 22, pm10: 45, aqi: 52, o3: 38, no2: 18, so2: 8, location: 'Patan', aqiCategory: 'Good', temperature: 27, humidity: 45, windSpeed: 12 },
-  { date: '2023-04-03', pm25: 120, pm10: 180, aqi: 172, o3: 60, no2: 45, so2: 38, location: 'Kalanki', aqiCategory: 'Unhealthy', temperature: 29, humidity: 60, windSpeed: 8 },
-  { date: '2023-04-04', pm25: 85, pm10: 125, aqi: 140, o3: 55, no2: 38, so2: 25, location: 'Balaju', aqiCategory: 'Unhealthy for Sensitive Groups', temperature: 26, humidity: 55, windSpeed: 15 },
-  { date: '2023-04-05', pm25: 28, pm10: 52, aqi: 58, o3: 40, no2: 20, so2: 10, location: 'Bhaktapur', aqiCategory: 'Moderate', temperature: 24, humidity: 62, windSpeed: 9 },
-  { date: '2023-04-06', pm25: 18, pm10: 32, aqi: 48, o3: 35, no2: 15, so2: 5, location: 'Lalitpur', aqiCategory: 'Good', temperature: 23, humidity: 58, windSpeed: 11 },
-  { date: '2023-04-07', pm25: 156, pm10: 210, aqi: 198, o3: 70, no2: 52, so2: 42, location: 'Koteshwor', aqiCategory: 'Very Unhealthy', temperature: 30, humidity: 65, windSpeed: 6 },
-  { date: '2023-04-08', pm25: 45, pm10: 78, aqi: 82, o3: 48, no2: 26, so2: 14, location: 'Basantapur', aqiCategory: 'Moderate', temperature: 26, humidity: 55, windSpeed: 10 },
-  { date: '2023-04-09', pm25: 68, pm10: 95, aqi: 110, o3: 52, no2: 32, so2: 20, location: 'Chabahil', aqiCategory: 'Unhealthy for Sensitive Groups', temperature: 28, humidity: 52, windSpeed: 12 },
-  { date: '2023-04-10', pm25: 32, pm10: 60, aqi: 65, o3: 42, no2: 24, so2: 16, location: 'Budhanilkantha', aqiCategory: 'Moderate', temperature: 25, humidity: 58, windSpeed: 8 },
-  { date: '2023-04-11', pm25: 105, pm10: 145, aqi: 158, o3: 62, no2: 40, so2: 30, location: 'Swayambhu', aqiCategory: 'Unhealthy', temperature: 29, humidity: 60, windSpeed: 9 },
-  { date: '2023-04-12', pm25: 25, pm10: 48, aqi: 55, o3: 40, no2: 18, so2: 10, location: 'Kirtipur', aqiCategory: 'Moderate', temperature: 27, humidity: 50, windSpeed: 11 },
-  { date: '2023-04-13', pm25: 15, pm10: 28, aqi: 42, o3: 32, no2: 12, so2: 6, location: 'Godavari', aqiCategory: 'Good', temperature: 24, humidity: 65, windSpeed: 13 },
-  { date: '2023-04-14', pm25: 92, pm10: 130, aqi: 145, o3: 58, no2: 36, so2: 26, location: 'Sankhu', aqiCategory: 'Unhealthy for Sensitive Groups', temperature: 28, humidity: 55, windSpeed: 10 },
-];
+// const exposureHistory = [
+//   { date: '2023-04-01', pm25: 35, pm10: 65, aqi: 68, o3: 45, no2: 22, so2: 12, location: 'Thamel', aqiCategory: 'Moderate', temperature: 25, humidity: 50, windSpeed: 10 },
+//   { date: '2023-04-02', pm25: 22, pm10: 45, aqi: 52, o3: 38, no2: 18, so2: 8, location: 'Patan', aqiCategory: 'Good', temperature: 27, humidity: 45, windSpeed: 12 },
+//   { date: '2023-04-03', pm25: 120, pm10: 180, aqi: 172, o3: 60, no2: 45, so2: 38, location: 'Kalanki', aqiCategory: 'Unhealthy', temperature: 29, humidity: 60, windSpeed: 8 },
+//   { date: '2023-04-04', pm25: 85, pm10: 125, aqi: 140, o3: 55, no2: 38, so2: 25, location: 'Balaju', aqiCategory: 'Unhealthy for Sensitive Groups', temperature: 26, humidity: 55, windSpeed: 15 },
+//   { date: '2023-04-05', pm25: 28, pm10: 52, aqi: 58, o3: 40, no2: 20, so2: 10, location: 'Bhaktapur', aqiCategory: 'Moderate', temperature: 24, humidity: 62, windSpeed: 9 },
+//   { date: '2023-04-06', pm25: 18, pm10: 32, aqi: 48, o3: 35, no2: 15, so2: 5, location: 'Lalitpur', aqiCategory: 'Good', temperature: 23, humidity: 58, windSpeed: 11 },
+//   { date: '2023-04-07', pm25: 156, pm10: 210, aqi: 198, o3: 70, no2: 52, so2: 42, location: 'Koteshwor', aqiCategory: 'Very Unhealthy', temperature: 30, humidity: 65, windSpeed: 6 },
+//   { date: '2023-04-08', pm25: 45, pm10: 78, aqi: 82, o3: 48, no2: 26, so2: 14, location: 'Basantapur', aqiCategory: 'Moderate', temperature: 26, humidity: 55, windSpeed: 10 },
+//   { date: '2023-04-09', pm25: 68, pm10: 95, aqi: 110, o3: 52, no2: 32, so2: 20, location: 'Chabahil', aqiCategory: 'Unhealthy for Sensitive Groups', temperature: 28, humidity: 52, windSpeed: 12 },
+//   { date: '2023-04-10', pm25: 32, pm10: 60, aqi: 65, o3: 42, no2: 24, so2: 16, location: 'Budhanilkantha', aqiCategory: 'Moderate', temperature: 25, humidity: 58, windSpeed: 8 },
+//   { date: '2023-04-11', pm25: 105, pm10: 145, aqi: 158, o3: 62, no2: 40, so2: 30, location: 'Swayambhu', aqiCategory: 'Unhealthy', temperature: 29, humidity: 60, windSpeed: 9 },
+//   { date: '2023-04-12', pm25: 25, pm10: 48, aqi: 55, o3: 40, no2: 18, so2: 10, location: 'Kirtipur', aqiCategory: 'Moderate', temperature: 27, humidity: 50, windSpeed: 11 },
+//   { date: '2023-04-13', pm25: 15, pm10: 28, aqi: 42, o3: 32, no2: 12, so2: 6, location: 'Godavari', aqiCategory: 'Good', temperature: 24, humidity: 65, windSpeed: 13 },
+//   { date: '2023-04-14', pm25: 92, pm10: 130, aqi: 145, o3: 58, no2: 36, so2: 26, location: 'Sankhu', aqiCategory: 'Unhealthy for Sensitive Groups', temperature: 28, humidity: 55, windSpeed: 10 },
+// ];
 
 const weeklyData = [
   { day: 'Mon', PM25: 35, PM10: 65, AQI: 68, NO2: 22, SO2: 12, O3: 45 },
@@ -454,7 +453,7 @@ export default function Dashboard() {
   const [exposure] = useState(78);
   const [showNotifications, setShowNotifications] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+
   const [showCalendar, setShowCalendar] = useState(false);
   const [isMapFullscreen, setIsMapFullscreen] = useState(false);
   const [showHelpDialog, setShowHelpDialog] = useState(false);
@@ -466,14 +465,14 @@ export default function Dashboard() {
   ]);
   
   // Function to calculate the exposure summary based on history
-  const getExposureSummary = () => {
-    return {
-      dailyAverage: exposureHistory.reduce((sum, day) => sum + day.pm25, 0) / exposureHistory.length,
-      weeklyTrend: '+12%',
-      highestValue: Math.max(...exposureHistory.map(day => day.pm25)),
-      highestLocation: exposureHistory.sort((a, b) => b.pm25 - a.pm25)[0].location
-    };
-  }
+  // const getExposureSummary = () => {
+  //   return {
+  //     dailyAverage: exposureHistory.reduce((sum, day) => sum + day.pm25, 0) / exposureHistory.length,
+  //     weeklyTrend: '+12%',
+  //     highestValue: Math.max(...exposureHistory.map(day => day.pm25)),
+  //     highestLocation: exposureHistory.sort((a, b) => b.pm25 - a.pm25)[0].location
+  //   };
+  // }
   
   // Generate custom heatmap colors based on value
   const getHeatmapCellColor = (value: number) => {
@@ -484,11 +483,8 @@ export default function Dashboard() {
     return '#006d2c';
   };
 
-  // Format date for display
-  const formatDate = (date: Date | undefined) => {
-    if (!date) return "";
-    return format(date, 'PPP');
-  };
+
+ 
   
   // Get alert icon based on severity
   const getAlertIcon = (severity: string) => {
@@ -518,16 +514,11 @@ export default function Dashboard() {
                 className="hidden md:flex"
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {formatDate(selectedDate)}
+              
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={setSelectedDate}
-                initialFocus
-              />
+             
             </PopoverContent>
           </Popover>
           
