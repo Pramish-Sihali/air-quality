@@ -1,16 +1,5 @@
 #!/usr/bin/env python3
-"""
-EPA Historical Air Quality Data Scraper
-This script fetches historical air pollution data from the EPA's Air Quality System (AQS) API,
-which provides access to outdoor air quality data collected by EPA, state, local, and tribal
-air pollution control agencies.
 
-Requirements:
-- requests
-- pandas
-
-Install with: pip install requests pandas
-"""
 
 import requests
 import pandas as pd

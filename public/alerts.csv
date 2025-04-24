@@ -1,6 +1,0 @@
-id,title,message,time,severity,location
-1,High Pollution Alert,PM2.5 levels exceeding 150 μg/m³ near your home,30 minutes ago,Critical,Koteshwor
-2,Route Warning,Heavy congestion on your regular route - air quality degraded,2 hours ago,Warning,Kalanki
-3,Weather Impact,Forecasted dust storm for tomorrow - prepare accordingly,5 hours ago,Warning,Valley-wide
-4,Commute Alert,Your usual morning route shows 35% higher pollution today,1 hour ago,Warning,Balaju
-5,Health Warning,Extended exposure above WHO guidelines detected,3 hours ago,Critical,Thamel

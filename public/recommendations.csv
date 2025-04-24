@@ -1,9 +1,0 @@
-id,text,category,route,priority,impact_score
-1,Consider using an N95 mask during your morning commute to Kalanki,Critical,Home to Office,High,85
-2,Schedule outdoor exercise before 9 AM when pollution levels are lower,Health,Daily Routine,Medium,72
-3,Alternative route via Lalitpur reduces your PM2.5 exposure by 45%,Route,Office to Home,High,78
-4,Close windows during evening hours (6-8 PM) when pollution spikes,Home,Indoor Air,Medium,65
-5,Monitor indoor air quality at your Thamel residence,Home,Indoor Air,Low,50
-6,Avoid the Koteshwor junction between 5-7 PM on weekdays,Critical,Daily Route,High,90
-7,Use air purifier during peak pollution hours at home,Health,Indoor Air,Medium,70
-8,Consider carpooling to reduce overall traffic pollution,Environment,Commute,Low,45
